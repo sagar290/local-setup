@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18
+    volumes:
+     - ./postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=courier
+    ports:
+      - "5432:5432"
+
+  mysql8:
+    image: mysql:8.1
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+    restart: always
+    environment:
+      MYSQL_USER: sagar
+      MYSQL_PASSWORD: 1234
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+
+  consul:
+    container_name: consul
+    image: 'consul:1.15'
+    volumes:
+     - ./consul/consul/hermes:/consul/data
+    ports:
+      - '8500:8500'
+      
+  rabbitmq:
+    container_name: rabbitmq
+    build:
+      context: .
+      dockerfile: ./docker/rabbitmq/rabbitmq.dockerfile
+    hostname: rabbitmq-server
+    volumes:
+     - .rabbitmq-backup:/var/lib/rabbitmq/mnesia/
+    environment:
+     RABBITMQ_USER: "user"
+     RABBITMQ_PASSWORD: "password"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+volumes:
+  data01:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge 
